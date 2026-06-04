@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout({ children }) {
-  // Mock user state, you can hook this up to your context/state manager
-  const user = { role: null, name: null }; 
+  const { user, clearAuth } = useAuth();
+  const role = user?.role?.toLowerCase();
 
   return (
     <>
@@ -14,9 +15,9 @@ export default function Layout({ children }) {
           <Link to="/" className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:text-text_color hover:bg-border_color transition-colors">
             Jobs
           </Link>
-          {user.name ? (
+          {user?.name ? (
             <>
-              {user.role === 'employer' ? (
+              {role === 'broker' ? (
                 <Link to="/employer" className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:text-text_color hover:bg-border_color transition-colors">
                   Dashboard
                 </Link>
@@ -28,7 +29,11 @@ export default function Layout({ children }) {
               <span className="text-xs text-muted bg-card px-3 py-1.5 rounded-full border border-border_color">
                 👤 {user.name}
               </span>
-              <button className="text-sm text-danger border border-border_color px-4 py-2 rounded-lg hover:bg-danger/10 transition-colors">
+              <button
+                type="button"
+                onClick={clearAuth}
+                className="text-sm text-danger border border-border_color px-4 py-2 rounded-lg hover:bg-danger/10 transition-colors"
+              >
                 Logout
               </button>
             </>

@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Auth from './pages/Auth';
 import EmployerDashboard from './pages/EmployerDashboard';
 import StudentDashboard from './pages/StudentDashboard';
+import JobDetails from './pages/JobDetails';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/auth" element={<Auth />} />
           <Route path="/employer" element={<EmployerDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
         </Routes>
       </Layout>
     </BrowserRouter>

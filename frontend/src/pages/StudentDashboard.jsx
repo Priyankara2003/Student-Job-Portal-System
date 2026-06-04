@@ -1,7 +1,18 @@
+import { useEffect, useState } from 'react';
+import { apiRequest } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+
 export default function StudentDashboard() {
-  const applications = [
-    { job_title: 'Frontend Developer', company_name: 'Tech Corp', applied_at: '2026-05-18' }
-  ];
+  const { token } = useAuth();
+  const [applications, setApplications] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setError('');
+    apiRequest('/applications/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(setApplications)
+      .catch((err) => setError(err.message || 'Failed to load applications'));
+  }, [token]);
 
   return (
     <div className="py-8">
@@ -16,6 +27,7 @@ export default function StudentDashboard() {
         <div className="p-5 border-b border-border_color font-bold text-text_color flex items-center gap-2">
           📄 My Applications ({applications.length})
         </div>
+        {error && <div className="text-danger text-sm px-5 pt-4">{error}</div>}
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -34,7 +46,7 @@ export default function StudentDashboard() {
                   <td className="p-4 text-[0.88rem] text-muted border-b border-border_color">{app.applied_at}</td>
                   <td className="p-4 text-[0.88rem] border-b border-border_color">
                     <span className="bg-[#10b981]/15 text-accent border border-[#10b981]/30 px-3 py-1 rounded-full text-[0.75rem] font-semibold inline-block">
-                      Applied
+                      {app.status}
                     </span>
                   </td>
                 </tr>

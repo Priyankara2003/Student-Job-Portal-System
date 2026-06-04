@@ -18,6 +18,7 @@ CREATE TABLE jobs (
     job_id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(150) NOT NULL,
     description TEXT NOT NULL,
+    category VARCHAR(50),
     salary DECIMAL(10, 2) NOT NULL, -- Supports formats like 1500.00
     location VARCHAR(100) NOT NULL,
     broker_id INT NOT NULL, -- Tracks which broker posted the job
