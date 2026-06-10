@@ -10,6 +10,7 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL, -- To store hashed passwords
     role ENUM('Student', 'Broker') NOT NULL, -- Restricts values to only these two
     contact_no VARCHAR(15),
+    bio TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

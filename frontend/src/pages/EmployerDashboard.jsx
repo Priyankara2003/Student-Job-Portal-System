@@ -7,9 +7,18 @@ export default function EmployerDashboard() {
   const [jobs, setJobs] = useState([]);
   const [applicants, setApplicants] = useState([]);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [editingJob, setEditingJob] = useState(null);
   const [jobForm, setJobForm] = useState({
     title: '',
     category: 'Other',
+    location: '',
+    salary: '',
+    description: '',
+  });
+  const [editForm, setEditForm] = useState({
+    title: '',
+    category: '',
     location: '',
     salary: '',
     description: '',
@@ -36,6 +45,7 @@ export default function EmployerDashboard() {
   const handleCreateJob = async (event) => {
     event.preventDefault();
     setError('');
+    setSuccess('');
     try {
       await apiRequest('/jobs', {
         method: 'POST',
@@ -46,6 +56,7 @@ export default function EmployerDashboard() {
         }),
       });
       setJobForm({ title: '', category: 'Other', location: '', salary: '', description: '' });
+      setSuccess('Job posted successfully!');
       loadData();
     } catch (err) {
       setError(err.message || 'Failed to post job');
@@ -54,14 +65,55 @@ export default function EmployerDashboard() {
 
   const handleDelete = async (jobId) => {
     setError('');
+    setSuccess('');
     try {
       await apiRequest(`/jobs/${jobId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
+      setSuccess('Job deleted successfully.');
       loadData();
     } catch (err) {
       setError(err.message || 'Failed to delete job');
+    }
+  };
+
+  const startEdit = (job) => {
+    setEditingJob(job.job_id);
+    setEditForm({
+      title: job.title,
+      category: job.category || 'Other',
+      location: job.location || '',
+      salary: String(job.salary),
+      description: job.description,
+    });
+    setError('');
+    setSuccess('');
+  };
+
+  const cancelEdit = () => {
+    setEditingJob(null);
+    setEditForm({ title: '', category: '', location: '', salary: '', description: '' });
+  };
+
+  const handleUpdateJob = async (event) => {
+    event.preventDefault();
+    setError('');
+    setSuccess('');
+    try {
+      await apiRequest(`/jobs/${editingJob}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          ...editForm,
+          salary: Number(editForm.salary),
+        }),
+      });
+      setEditingJob(null);
+      setSuccess('Job updated successfully!');
+      loadData();
+    } catch (err) {
+      setError(err.message || 'Failed to update job');
     }
   };
 
@@ -74,22 +126,38 @@ export default function EmployerDashboard() {
         </div>
       </div>
 
+      {error && <div className="text-danger text-sm mb-4 bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">{error}</div>}
+      {success && <div className="text-accent text-sm mb-4 bg-accent/10 border border-accent/30 rounded-xl px-4 py-3">{success}</div>}
+
       <div className="grid grid-cols-1 md:grid-cols-[360px_1fr] gap-8">
         <div>
+          {/* Post or Edit Job Card */}
           <div className="bg-card border border-border_color rounded-2xl overflow-hidden mb-6">
             <div className="p-5 border-b border-border_color font-bold text-text_color flex items-center gap-2">
-              📝 Post a New Job
+              {editingJob ? '✏️ Edit Job' : '📝 Post a New Job'}
+              {editingJob && (
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="ml-auto text-[0.8rem] text-muted hover:text-danger transition-colors"
+                >
+                  ✕ Cancel
+                </button>
+              )}
             </div>
             <div className="p-6">
-              <form className="flex flex-col gap-4" onSubmit={handleCreateJob}>
+              <form className="flex flex-col gap-4" onSubmit={editingJob ? handleUpdateJob : handleCreateJob}>
                 <div>
                   <label className="block text-[0.85rem] text-muted font-medium mb-1">Job Title</label>
                   <input
                     type="text"
                     className="w-full bg-bg2 border border-border_color rounded-xl p-3 text-text_color font-poppins text-[0.9rem] focus:outline-none focus:border-primary"
                     placeholder="e.g. Cashier, Content Writer"
-                    value={jobForm.title}
-                    onChange={(event) => setJobForm({ ...jobForm, title: event.target.value })}
+                    value={editingJob ? editForm.title : jobForm.title}
+                    onChange={(event) => editingJob
+                      ? setEditForm({ ...editForm, title: event.target.value })
+                      : setJobForm({ ...jobForm, title: event.target.value })
+                    }
                     required
                   />
                 </div>
@@ -97,14 +165,18 @@ export default function EmployerDashboard() {
                   <label className="block text-[0.85rem] text-muted font-medium mb-1">Category</label>
                   <select
                     className="w-full bg-bg2 border border-border_color rounded-xl p-3 text-text_color font-poppins text-[0.9rem] focus:outline-none focus:border-primary"
-                    value={jobForm.category}
-                    onChange={(event) => setJobForm({ ...jobForm, category: event.target.value })}
+                    value={editingJob ? editForm.category : jobForm.category}
+                    onChange={(event) => editingJob
+                      ? setEditForm({ ...editForm, category: event.target.value })
+                      : setJobForm({ ...jobForm, category: event.target.value })
+                    }
                   >
                     <option value="Other">Select category...</option>
                     <option value="IT">💻 IT & Software</option>
                     <option value="Marketing">📣 Marketing</option>
                     <option value="Retail">🛒 Retail</option>
                     <option value="Tutoring">📚 Tutoring</option>
+                    <option value="Delivery">🚚 Delivery</option>
                     <option value="Other">🌐 Other</option>
                   </select>
                 </div>
@@ -114,8 +186,11 @@ export default function EmployerDashboard() {
                     type="text"
                     className="w-full bg-bg2 border border-border_color rounded-xl p-3 text-text_color font-poppins text-[0.9rem] focus:outline-none focus:border-primary"
                     placeholder="City or Remote"
-                    value={jobForm.location}
-                    onChange={(event) => setJobForm({ ...jobForm, location: event.target.value })}
+                    value={editingJob ? editForm.location : jobForm.location}
+                    onChange={(event) => editingJob
+                      ? setEditForm({ ...editForm, location: event.target.value })
+                      : setJobForm({ ...jobForm, location: event.target.value })
+                    }
                   />
                 </div>
                 <div>
@@ -125,8 +200,11 @@ export default function EmployerDashboard() {
                     step="0.01"
                     className="w-full bg-bg2 border border-border_color rounded-xl p-3 text-text_color font-poppins text-[0.9rem] focus:outline-none focus:border-primary"
                     placeholder="e.g. 15.00"
-                    value={jobForm.salary}
-                    onChange={(event) => setJobForm({ ...jobForm, salary: event.target.value })}
+                    value={editingJob ? editForm.salary : jobForm.salary}
+                    onChange={(event) => editingJob
+                      ? setEditForm({ ...editForm, salary: event.target.value })
+                      : setJobForm({ ...jobForm, salary: event.target.value })
+                    }
                     required
                   />
                 </div>
@@ -135,19 +213,29 @@ export default function EmployerDashboard() {
                   <textarea
                     className="w-full bg-bg2 border border-border_color rounded-xl p-3 text-text_color font-poppins text-[0.9rem] min-h-[100px] resize-y focus:outline-none focus:border-primary"
                     placeholder="Describe the role and requirements..."
-                    value={jobForm.description}
-                    onChange={(event) => setJobForm({ ...jobForm, description: event.target.value })}
+                    value={editingJob ? editForm.description : jobForm.description}
+                    onChange={(event) => editingJob
+                      ? setEditForm({ ...editForm, description: event.target.value })
+                      : setJobForm({ ...jobForm, description: event.target.value })
+                    }
                     required
                   ></textarea>
                 </div>
-                {error && <div className="text-danger text-sm">{error}</div>}
-                <button type="submit" className="w-full bg-gradient-to-br from-primary to-[#5a52e0] text-white border-none rounded-xl p-3 font-poppins font-bold text-[0.95rem] cursor-pointer mt-2 transition-all hover:opacity-90 hover:-translate-y-[1px]">
-                  Post Job →
+                <button
+                  type="submit"
+                  className={`w-full text-white border-none rounded-xl p-3 font-poppins font-bold text-[0.95rem] cursor-pointer mt-2 transition-all hover:opacity-90 hover:-translate-y-[1px] ${
+                    editingJob
+                      ? 'bg-gradient-to-br from-[#f59e0b] to-[#d97706]'
+                      : 'bg-gradient-to-br from-primary to-[#5a52e0]'
+                  }`}
+                >
+                  {editingJob ? 'Update Job →' : 'Post Job →'}
                 </button>
               </form>
             </div>
           </div>
 
+          {/* Your Posted Jobs Table */}
           <div className="bg-card border border-border_color rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-border_color font-bold text-text_color flex items-center gap-2">
               💼 Your Posted Jobs ({jobs.length})
@@ -158,7 +246,7 @@ export default function EmployerDashboard() {
                   <tr>
                     <th className="p-4 text-left text-[0.8rem] font-semibold text-muted uppercase tracking-wider border-b border-border_color">Title</th>
                     <th className="p-4 text-left text-[0.8rem] font-semibold text-muted uppercase tracking-wider border-b border-border_color">Category</th>
-                    <th className="p-4 text-left text-[0.8rem] font-semibold text-muted uppercase tracking-wider border-b border-border_color">Action</th>
+                    <th className="p-4 text-left text-[0.8rem] font-semibold text-muted uppercase tracking-wider border-b border-border_color">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,13 +259,22 @@ export default function EmployerDashboard() {
                         </span>
                       </td>
                       <td className="p-4 text-[0.88rem] border-b border-border_color">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(job.job_id)}
-                          className="bg-danger/10 text-danger border border-danger/30 rounded-lg px-3 py-1 text-[0.8rem] font-poppins cursor-pointer"
-                        >
-                          🗑 Delete
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => startEdit(job)}
+                            className="bg-[#f59e0b]/10 text-[#f59e0b] border border-[#f59e0b]/30 rounded-lg px-3 py-1 text-[0.8rem] font-poppins cursor-pointer hover:bg-[#f59e0b]/20 transition-colors"
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(job.job_id)}
+                            className="bg-danger/10 text-danger border border-danger/30 rounded-lg px-3 py-1 text-[0.8rem] font-poppins cursor-pointer hover:bg-danger/20 transition-colors"
+                          >
+                            🗑 Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )) : (
@@ -191,6 +288,7 @@ export default function EmployerDashboard() {
           </div>
         </div>
 
+        {/* Applicants Table */}
         <div className="bg-card border border-border_color rounded-2xl overflow-hidden self-start">
           <div className="p-5 border-b border-border_color font-bold text-text_color flex items-center gap-2">
             👥 Applicants ({applicants.length})

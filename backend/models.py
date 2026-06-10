@@ -15,6 +15,7 @@ class User(Base):
     password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[str] = mapped_column(Enum("Student", "Broker", name="user_role"), nullable=False)
     contact_no: Mapped[str | None] = mapped_column(String(15))
+    bio: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
 
     jobs: Mapped[list["Job"]] = relationship("Job", back_populates="broker")

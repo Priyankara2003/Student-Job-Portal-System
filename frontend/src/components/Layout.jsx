@@ -26,6 +26,9 @@ export default function Layout({ children }) {
                   My Applications
                 </Link>
               )}
+              <Link to="/profile" className="text-sm font-medium text-muted px-4 py-2 rounded-lg hover:text-text_color hover:bg-border_color transition-colors">
+                Profile
+              </Link>
               <span className="text-xs text-muted bg-card px-3 py-1.5 rounded-full border border-border_color">
                 👤 {user.name}
               </span>

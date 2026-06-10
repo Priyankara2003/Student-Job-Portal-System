@@ -85,6 +85,8 @@ def update_me(
         current_user.name = payload.name
     if payload.contact_no is not None:
         current_user.contact_no = payload.contact_no
+    if payload.bio is not None:
+        current_user.bio = payload.bio
     if payload.role is not None:
         role = payload.role.strip().title()
         if role not in {"Student", "Broker"}:
@@ -110,6 +112,16 @@ def list_jobs(
     return query.order_by(Job.created_at.desc()).all()
 
 
+@app.get("/jobs/mine", response_model=list[JobOut])
+def get_my_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role != "Broker":
+        raise HTTPException(status_code=403, detail="Only brokers can access this")
+    return db.query(Job).filter(Job.broker_id == current_user.user_id).all()
+
+
 @app.get("/jobs/{job_id}", response_model=JobDetail)
 def get_job(job_id: int, db: Session = Depends(get_db)):
     job = db.query(Job).filter(Job.job_id == job_id).first()
@@ -128,16 +140,6 @@ def get_job(job_id: int, db: Session = Depends(get_db)):
         broker_name=broker.name if broker else None,
         broker_email=broker.email if broker else None,
     )
-
-
-@app.get("/jobs/mine", response_model=list[JobOut])
-def get_my_jobs(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    if current_user.role != "Broker":
-        raise HTTPException(status_code=403, detail="Only brokers can access this")
-    return db.query(Job).filter(Job.broker_id == current_user.user_id).all()
 
 
 @app.post("/jobs", response_model=JobOut, status_code=status.HTTP_201_CREATED)

@@ -5,6 +5,7 @@ import Auth from './pages/Auth';
 import EmployerDashboard from './pages/EmployerDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import JobDetails from './pages/JobDetails';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/employer" element={<EmployerDashboard />} />
           <Route path="/student" element={<StudentDashboard />} />
           <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </Layout>
     </BrowserRouter>

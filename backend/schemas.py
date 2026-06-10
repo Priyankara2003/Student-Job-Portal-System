@@ -14,6 +14,7 @@ class UserBase(BaseModel):
     email: EmailStr
     role: str
     contact_no: Optional[str] = None
+    bio: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -36,6 +37,7 @@ class UserOut(UserBase):
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=100)
     contact_no: Optional[str] = None
+    bio: Optional[str] = None
     role: Optional[str] = None
 
 

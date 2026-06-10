@@ -13,6 +13,7 @@ export default function Auth() {
     name: '',
     email: '',
     password: '',
+    contact_no: '',
     role: 'Student',
   });
 
@@ -38,9 +39,11 @@ export default function Auth() {
     event.preventDefault();
     setRegisterError('');
     try {
+      const payload = { ...registerForm };
+      if (!payload.contact_no) delete payload.contact_no;
       await apiRequest('/auth/register', {
         method: 'POST',
-        body: JSON.stringify(registerForm),
+        body: JSON.stringify(payload),
       });
       const token = await apiRequest('/auth/login', {
         method: 'POST',
@@ -134,6 +137,16 @@ export default function Auth() {
                 value={registerForm.password}
                 onChange={(event) => setRegisterForm({ ...registerForm, password: event.target.value })}
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-[0.85rem] text-muted font-medium mb-1.5">Contact Number</label>
+              <input
+                type="tel"
+                className="w-full bg-bg2 border border-border_color rounded-xl px-4 py-3 text-text_color font-poppins text-[0.9rem] transition-colors focus:outline-none focus:border-primary"
+                placeholder="e.g. 0771234567"
+                value={registerForm.contact_no}
+                onChange={(event) => setRegisterForm({ ...registerForm, contact_no: event.target.value })}
               />
             </div>
             <div>
