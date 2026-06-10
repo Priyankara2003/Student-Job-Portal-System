@@ -35,7 +35,7 @@ class Job(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
 
     broker: Mapped["User"] = relationship("User", back_populates="jobs")
-    applications: Mapped[list["Application"]] = relationship("Application", back_populates="job")
+    applications: Mapped[list["Application"]] = relationship("Application", back_populates="job", cascade="all, delete-orphan")
 
 
 class Application(Base):
